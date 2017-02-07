@@ -45,30 +45,102 @@
       
       <!-- Main jumbotron for a primary marketing message or call to action -->
       <div class="jumbotron">
-	<h1>Data Pipeline Project Exploratory Analysis Byte Example</h1>
-        <p>This is the Exploratory Analysis Byte of the Data Pipeline class.</p>
+	<h1>Exploratory Analysis: Energy and Water Consumption in Allegheny County Municipal Buildings </h1>
+        <p>In this Exploratory Analysis Byte I looked at the water and energy consumption of Allegheny county buildings from 2010-2014.
+        </p>
+        <p> <b>Question:</b> The Question I wanted to answer about this data was what were the trends in energy consumption by Allegeheny County Municipal 
+        Buildings from 2010 - 2014.
+        </p>
+        <p> <b>Findings:</b> I found that Allegheny County's total spending on energy decreased every year from 2010 to 2013, and then increased
+        slightly from 2013 to 2014. The data itself had a very large spread due to to the large variation in size of sites/buildings reported. 
+        </p>
+        <p> **The graphs and tables in the tabs below summarize the data and what I found. Because most of the graphs use the python Plotly API, 
+        you may need to reload the page if the graphs do not appear.
+        </p>
       </div>
       
       <div class="page-header">
 	
       </div> <!-- /page-header -->
-    </div> <!-- /container -->
+   
     
-    <div class="button-toolbar" role="toolbar" id="headers" name="headers">
-      {% for column in allheaders %}
-      <button type="button" class = "btn-space btn btn-info" id="{{column}}" onclick="updateTable('{{column}}')">{{column}}</button>
-      {% endfor %}
-    </div>
-    
-    <div id="animals"><table id="data" class="table table-striped table-hover">
-	<thead class ="thead-inverse">
-	  <tr id="cols">
-	  </tr>
-	</thead>
-	<tbody id="rows"> 
-	</tbody>
-    </table></div>
+      <ul class="nav nav-tabs">
+	    <li class="active"><a data-toggle="tab" href="#home">Sanitized Data</a></li>
+	    <li><a data-toggle="tab" href="#menu1">Boxplot</a></li>
+	    <li><a data-toggle="tab" href="#menu2">Normal Distribution</a></li>
+	    <li><a data-toggle="tab" href="#menu3">Stats</a></li>
+	    <li><a data-toggle="tab" href="#menu4">Total Cost</a></li>
+	  </ul>
+			
+	<div class="tab-content">
+	    <div id="home" class="tab-pane fade in active">
+	      <h3>Data</h3>
+	      <p> The raw data can be found <a href="https://www.google.com/fusiontables/DataSource?docid=15CnIT8u1snCOSRYjV3lPrEnUR_5qoGZ1ZhwGytAt">here</a>. </p>
+	      <p> The table below represents a snapshot of the data I used for analysis. I removed all instances where the Total Cost ($) was $0 and outliers that I categorized as
+	      spending over $1,000,000. </p>
+		      <div class="table-responsive">
+				  <table class="table table-striped table-hover">
+				    <thead class="thead-inverse">
+				     <tr> 
+				{% for item in headers %}
+				         <th>{{ item }}</th>
+				{% endfor %}
+				     </tr>
+				    </thead>
+				    <tbody>
+				{% for row in content %}
+				     <tr>
+				  {% for datum in row %}
+				            <td>{{ datum }} </td>
+				  {% endfor %}
+				     </tr>
+				{% endfor %}
+				    </tbody>
+				   </table>
+				</div> 
+	    </div>
+	    <div id="menu1" class="tab-pane fade">
+	      <h3>Boxplot (Made with Plotly)</h3>
+	      <p> The graphs below represent the spread of all sites for 2010-2014. I saninitized the data by 
+	      removing instances where the Total Cost was 0 or greater than 1,000,000. </p>
+	     <p> The first plot shows the data wholistically with all outliers shown, the second is the same exact plot but with a zoomed in y-axis. </p>
+	     <p> (You may have to reload the page for the plots to load) </p>
+	      <div>
+			    <iframe width="900" height="800" frameborder="0" scrolling="no" src="https://plot.ly/~ediering/98.embed"></iframe>
+			    <iframe width="900" height="800" frameborder="0" scrolling="no" src="https://plot.ly/~ediering/102.embed"></iframe>
+	    </div>
+	    </div>
+	    <div id="menu2" class="tab-pane fade">
+	      <h3>Normalized Distribution Plots (Made with Seaborn)</h3>
+	      <p>The data skewed right and not normal. There was a very large spread across the data due to the strong variation of size of sites. Some of the larger sites were
+	      broken down into multiple sites in the data which also lead to a large spread as well.</p>
+	      <img alt="ten" src="templates/images/10.png" />
+	      <img alt="ten" src="templates/images/11.png" />
+	      <img alt="ten" src="templates/images/12.png" />
+	      <img alt="ten" src="templates/images/13.png" />
+	      <img alt="ten" src="templates/images/14.png" />
+	    </div>
+	    
+	    <div id="menu3" class="tab-pane fade">
+	      <h3>Mean and Median Plots (Made with Plotly)</h3>
+	      <p>The first graph shows a scatterplot of 'Total Cost ($)' per site by year.</p>
+	      <p>The second graph the mean cost of energy for Allegheny Country Municipal Buildings by year. The graph shows that the mean cost has descreased
+	      from 2010 to 2014.</p>
+	      <p>The third graph the median cost of energy for Allegheny Country Municipal Buildings by year. The graph shows that the mean cost has descreased
+	      from 2010 to 2014.</p>
+	      <iframe width="900" height="800" frameborder="0" scrolling="no" src="https://plot.ly/~ediering/116.embed"></iframe>
+	      <iframe width="900" height="800" frameborder="0" scrolling="no" src="https://plot.ly/~ediering/118.embed"></iframe>
+	    </div>
+	    
+	  	<div id="menu4" class="tab-pane fade">
+	      <h3>Total Cost Overall (Made with Plotly) </h3>
+	      <p>The graph shows the total amount of money spent on energy for Allegheny Country Municipal Buildings by year.</p>
+	      <iframe width="900" height="800" frameborder="0" scrolling="no" src="https://plot.ly/~ediering/110.embed"></iframe>
+	      <iframe width="900" height="800" frameborder="0" scrolling="no" src="https://plot.ly/~ediering/114.embed"></iframe>
+	    
+		</div>
 
+ </div> <!-- /container -->
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->

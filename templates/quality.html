@@ -46,27 +46,88 @@
       <!-- Main jumbotron for a primary marketing message or call to action -->
       <div class="jumbotron">
 	<h1>Quality: About This Data Set</h1>
-        <p>Write a brief summary about the quality of the data set here</a></p>
+        <p>The quality of this data set was somewhat lacking due to the prescence of missing information. Many fields were zero or blank within 
+        the original data set along with the particular fields/ columns I was interested in to answer my question. The data itself had a very large
+        spread and becuase of this was not normalized, but this is to be expected due to the nature of the data. Many sites and buildings vary greatly in 
+        size and in effect the total cost of energy used so this is to be expected within the data. </a></p>
       </div>
 
     
       <div class="page-header">
-	<h2>Is the data complete?</h2>
-	<p>If not, what is missing and what concerns does it raise?
-	What is your evidence for this?</p>
+	<h2>Is the data complete? <b>- NO</b></h2>
+	<p>This dataset was not complete because many of the facilities were missing information (either NaN values or zero). The most commonly missing fields 
+	were Site EUI (kBtu/ft²), Source EUI (kBtu/ft²), Weather Normalized Site EUI (kBtu/ft²), and Weather Normalized Source EUI (kBtu/ft²). I specifically
+	looked at the Total Energy Cost ($) field for the most of my analysis and even this was missing for entire location, or sometimes just for certain 
+	years at specific facilites. Some of this missing data may stem from the fact that some larger sites were broken down and reported as multiple sites by 
+	their specific building. For example Boyce Park is listed as many different sites becuase the data distinguishes it's different buildings as different sites,
+	however some of these lodges and building do not use any elecdtricity.</p>
+	<p> The tab below is the result of a query that shows all the sites that are missing data for Total Energy Cost ($). These sites were either missing this
+	data completley or for specific years. </p>
+
+  <div class="panel-group">
+    <div class="panel panel-default">
+       <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" href="#collapse1">List of Sites With Missing 'Total Cost' data</a>
+        </h4>
       </div>
+      <div id="collapse1" class="panel-collapse collapse">
+        <div class="panel-body">
+        	    <div class="table-responsive">
+	  <table class="table table-striped table-hover">
+	    <thead class="thead-inverse">
+	     <tr> 
+			{% for item in headers %}
+			         <th>{{ item }}</th>
+			{% endfor %}
+			     </tr>
+			    </thead>
+			    <tbody>
+			{% for row in content %}
+			     <tr>
+			  {% for datum in row %}
+			            <td>{{ datum }} </td>
+			  {% endfor %}
+			     </tr>
+			{% endfor %}
+			    </tbody>
+			   </table>
+			</div> 
+
+      		</div>
+        </div>
+      </div>
+    </div>
+  </div>
+   
+
       
       <div class="page-header">
-	<h2>Is the data coherent?</h2>
-	<p>Does it make sense relative to itself? Does it match your
-	expectations? Are the distributions sensible? What is your
-	evidence for this?</p>
+		<h2>Is the data coherent?</h2>
+		<p>Does it make sense relative to itself? Does it match your
+		expectations? Are the distributions sensible? What is your
+		evidence for this?</p>
+		<p>While the data has a very large spread it does make sense because of the variation in the size of each site and buildings listed. 
+		For example, the county prison spends a great deal more on energy than a local municipal park with a few shelter buildings. Because of this
+		I did expect the distributions to be skewed and not very good summaries of the data and I was correct in these assumptions (see graphs on home page).
+		</p>
+		<p> The distributions are heavily skewed right, but this is sensible because of the large spread of the data (see stats and noramlized plots on index). 
+      	Beucase the data is not normalized, there is a difference in the median and mean trends. The median is much lower than the mean (which is to be expect),
+      	and the median does not follow the general trend of the overal costs descreasing but the mean does.
+      	</p>
       </div>
 
       <div class="page-header">
 	<h2>Is the data correct?</h2>
 	<p>What aspects of this data can you verify? How did you do so? What did
 	you find?</p>
+	<p> I was able to verify that the data set itself seems to be official and correct becuase the same data set was also listed at
+	<a href="https://catalog.data.gov/dataset/allegheny-county-municipal-building-energy-and-water-use">data.gov</a>.
+	However, I did find another dataset from 2009-2014 <a href="https://catalog.data.gov/dataset/municipal-building-energy-usage">here</a>
+	that includes discrepencies with what building are being reported. These dataset have similar data and descriptions and both come from Allegheny County
+	but second set listed buildings that my original data set did not. This leads me to beleive that the data may not be correct in the fact that it may be 
+	missing information that would be crucial to get a full picture of Allegheny County Municipal Building Energy Use. 
+	</p>
       </div>
 
     </div> <!-- /container -->

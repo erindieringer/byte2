@@ -1,170 +1,194 @@
+import csv
 import httplib2
 from apiclient.discovery import build
 import urllib
 import json
-import csv
-import matplotlib.pyplot as plt 
+import numpy as np
+import pandas as pd
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import seaborn as sns
+import plotly
+import plotly.plotly as py 
+import plotly.graph_objs as go
+from plotly.tools import FigureFactory as FF
 
+plotly.tools.set_credentials_file(username = 'ediering', api_key='k23nwbsle7')
 
 # This API key is provided by google as described in the tutorial
-API_KEY = '... add your own ...'
+API_KEY = 'AIzaSyAmiZjaV_lNunEyrglKUuqK57TvVPM84aY'
 
 # This is the table id for the fusion table
-TABLE_ID = '... add your own ...'
+TABLE_ID = '15CnIT8u1snCOSRYjV3lPrEnUR_5qoGZ1ZhwGytAt'
 
-# This API key is provided by google as described in the tutorial
-API_KEY = 'AIzaSyCpZ1iLD_Id7epHtnkEgAYTXsk2uBUtGkk'
-
-# This is the table id for the fusion table
-TABLE_ID = '1ymz3EtGdi4qKGMl5AxEFXtTlgk3tKi8iCpjTzvM'
-
-# open the data stored in a file called "data.json"
 try:
     fp = open("data.json")
     response = json.load(fp)
-
-# but if that file does not exist, download the data from fusiontables
 except IOError:
     service = build('fusiontables', 'v1', developerKey=API_KEY)
-    query = "SELECT * FROM " + TABLE_ID + " WHERE  AnimalType = 'DOG'"
+    query = "SELECT * FROM " + TABLE_ID #+ " WHERE 'Total Energy Cost ($)' > 0 AND 'Total Energy Cost ($)' < 1000000 "
     response = service.query().sql(sql=query).execute()
     fp = open("data.json", "w+")
     json.dump(response, fp)
     
-
-# this will be our summary of the data. For each column name, it will store
-# a dictionary containing the number of occurences of each possible
-# value for that column in the data. For example, for gender, 
-# the possible values are "MALE" and "FEMALE" and "UNKNOWN"
-# summary will contain {"MALE": 5199, "FEMALE": 4354, "UNKNOWN":82} 
-# indicating that in the data, 5199 rows are marked as MALE, 
-# 4354 rows are marked as FEMALE and 82 rows are marked as UNKNOWN
-summary = {} 
-columns = response['columns'] # the names of all columns
-rows = response['rows'] # the actual data 
-
-# how many rows are in the data we downloaded?
-# this should be the same as in the fusion table
-print len(rows)
-
-# we'll ignore some columns because they are
-# not useful for our analysis (such as AnimalID and Name which
-# are unique for every animal
-ignore = [u'AnimalID', u'AnimalType', u'Name', u'IconName', u'icon type']
-
-# now we want to summarize the data to facilitate exploration. To do 
-# so we will collect information about each *column* in the spreadsheet
-for i in range(0, len(columns)):  # loops through each column
-
-    # skip the rest of this loop if it's an ignore column
-    if columns[i] in ignore: continue 
-
-    # will store unique values for this column
-    column_values = {} 
-    # the name for this column
-    column_name = columns[i]
-
-    # loop through all of the rows of data
-    for row in rows:
-        # get the value stored for this column in this row
-        value = row[i]
-        
-        # convert any string values to ascii, and any empty strings 
-        # to a string called 'EMPTY' we can use as a value
-        if type(value) is unicode: value = row[i].encode('ascii','ignore') 
-        if value == '': value = 'EMPTY'
-        if value == 'NaN' : value = 'EMPTY'
-        
-        # increase the count the value already exists
-        try:               
-            column_values[value] = column_values[value] + 1
-
-        # or set it to 1 if it does not exist
-        except KeyError:  
-            column_values[value] = 1
-
-    # to facilitate exploration we want to also write our summary
-    # information for each column to disk in a csv file
-    fc = open("{0}.csv".format(column_name), "w+")
-    cwriter = csv.writer(fc)
-    cwriter.writerow(["name", "amount"])
-
-    # store the result in summary
-    summary[column_name] = column_values   
-
-
-# we also want to write summary information for the whole data set
-# containing the name of each column, the max rows in any value for that column
-# the min rows, the number of rows without a value, and the number of 
-# values only present in a single row ('unique')
-fp = open("summary.csv", "w+")
-headers = ["name", "max", "min", "empty", "unique"] 
-writer = csv.writer(fp)
-dict_writer = csv.DictWriter(fp, headers)
-writer.writerow(headers)
-
-# to collect that data, we need to loop through the summary
-# data we just created for each column. column_name is the column name,
-# details is the dictionary containing {column_value: numrows,  ...}
-for column_name, details in summary.iteritems():
-    # rowcounts is a list containing the numrows numbers, but 
-    # no column value names
-    rowcounts = details.values()
-    max_count = max(rowcounts)
-    min_count = min(rowcounts)
-
-    # we also want to know specifically how many rows had no
-    # entry for this column
-    try: 
-        emptyrowcounts = details["EMPTY"]
-    # and that throws an error, we know that no rows were empty
-    except KeyError:
-        emptyrowcounts = 0
-
-    # for a sanity check we print this out to the screen
-    print("column {0} has {1} different keys of which the 'EMPTY' key holds {2} values".format(column_name, len(details), emptyrowcounts))
-
-    # we can also calculate fun things like the number of 
-    # column values associated with only a single row
-    unique = 0
-    for numrows in details.itervalues():
-        if numrows == 1:
-            unique = unique + 1
-
-
-    # as a second sanity check, let's write this out to a csv summary file
-    row = {"name": column_name, "max": max_count, "min": min_count, "empty": emptyrowcounts, 
-           "unique":unique}
-    dict_writer.writerow(row)
-
-    # now we will write this all to a csv file:
-    # we loop through the different possible
-    # column values, and write out how many rows
-    # had that value. 
-    for column_value, numrows in details.iteritems():
-        # and write just the values for this out as a csv file
-        fc = open("{0}.csv".format(column_name), "a+")
-        kdict_writer = csv.DictWriter(fc, ["name", "amount"])
-        kdict_writer.writerow({"name":column_value, "amount":numrows})
-
-
-# some of the data is numeric -- especially the latituted, longitude,
-# zipfound, and zipplaced. You might also explore the data
-# about, for example, month found/placed numerically (are some months
-# likely to have more strays or placements than others?). You could
-# even parse the date data and look at for example the impact of 
-# day of week. The code below shows some ways of visualizing 
-# latitude and longitude only. 
+# print len(response['rows'])
     
-latitude = summary['Latitude']
+data_df = pd.DataFrame(response[u'rows'], columns = response[u'columns'])
 
-latitude = dict((float(k), v) for k, v in latitude.iteritems())
+working = data_df[['Site', 'Site ID', 'Year', 'Total Energy (kBtu)', 'Total Energy Cost ($)']]
 
-# make a bar plot of all the latitudes we found
-plt.bar(latitude.keys(), latitude.values())
-plt.show()
+pivot_cost = working.pivot(index='Site ID', columns='Year', values='Total Energy Cost ($)')
+pivot_energy = working.pivot(index='Site ID', columns='Year', values='Total Energy (kBtu)')
 
-# you may want to explore other visualizations
-# such as a histogram or other aspects of the data 
-# including other columns
+def totalcostplot_energy():
+  pivot_cost = working.pivot(index='Site ID', columns='Year', values='Total Energy Cost ($)')
+  pivot_energy = working.pivot(index='Site ID', columns='Year', values='Total Energy (kBtu)')
+  rows = pivot_cost.index
 
+  plot = []
+
+  for i in xrange(len(rows)):
+    index = rows[i]
+    trace = go.Scatter(
+        x = pivot_cost.columns.values,
+        y = pivot_cost.loc[index],
+        #mode = 'markers'
+    )
+    plot.append(trace)
+
+  layout = go.Layout(
+            xaxis=dict(
+              autotick=False),
+            showlegend=False)
+
+  fig= go.Figure(data=plot, layout=layout)
+  
+  return fig
+
+def boxplot():
+  ten = pd.to_numeric(pivot_cost['2010']).dropna()
+  eleven = pd.to_numeric(pivot_cost['2011']).dropna()
+  twelve = pd.to_numeric(pivot_cost['2012']).dropna()
+  thirteen = pd.to_numeric(pivot_cost['2013']).dropna()
+  fourteen = pd.to_numeric(pivot_cost['2014']).dropna()
+  
+  trace0 = go.Box(
+    y= ten,
+    name = '2010'
+  )
+  trace1 = go.Box(
+      y= eleven,
+      name = '2011'
+  )
+  trace2 = go.Box(
+      y= twelve,
+      name = '2012'
+  )
+  trace3 = go.Box(
+      y= thirteen,
+      name = '2013'
+  )
+  trace4 = go.Box(
+      y= fourteen,
+      name = '2014'
+  )
+  data = [trace0, trace1, trace2, trace3, trace4]
+  layout = go.Layout(
+    yaxis=dict(
+        range=[0, 40000]
+    )
+  )
+  return [data, layout]
+
+def histogram():
+  ten = pd.to_numeric(pivot_cost['2010']).dropna()
+  eleven = pd.to_numeric(pivot_cost['2011']).dropna()
+  twelve = pd.to_numeric(pivot_cost['2012']).dropna()
+  thirteen = pd.to_numeric(pivot_cost['2013']).dropna()
+  fourteen = pd.to_numeric(pivot_cost['2014']).dropna()
+  
+  plt = sns.distplot(fourteen)
+  plt1 = sns.distplot(thirteen)
+  plt2 = sns.distplot(twelve)
+  plt3 = sns.distplot(eleven)
+  plt4 = sns.distplot(ten)
+  fig = plt.get_figure()
+  fig.savefig("overlay.png")
+ 
+def sum_data():
+  cost = working['Total Energy Cost ($)']
+  print(cost[1])
+
+def average_data():
+  data_df = pd.DataFrame(response[u'rows'], columns = response[u'columns'])
+  working = data_df[['Site', 'Site ID', 'Year', 'Total Energy (kBtu)', 'Total Energy Cost ($)']]
+  pivot_cost = working.pivot(index='Site ID', columns='Year', values='Total Energy Cost ($)')
+  
+  ten = pd.to_numeric(pivot_cost['2010']).dropna()
+  eleven = pd.to_numeric(pivot_cost['2011']).dropna()
+  twelve = pd.to_numeric(pivot_cost['2012']).dropna()
+  thirteen = pd.to_numeric(pivot_cost['2013']).dropna()
+  fourteen = pd.to_numeric(pivot_cost['2014']).dropna()
+  
+  averages = [np.mean(ten), np.mean(eleven), np.mean(twelve), np.mean(thirteen), np.mean(fourteen)]
+  data = [go.Bar(
+            x=['2010', '2011', '2012', '2013', '2014'],
+            y=[averages[0], averages[1], averages[2], averages[3], averages[4] ],
+    )]
+  return data
+
+def median_data():
+  data_df = pd.DataFrame(response[u'rows'], columns = response[u'columns'])
+  working = data_df[['Site', 'Site ID', 'Year', 'Total Energy (kBtu)', 'Total Energy Cost ($)']]
+  pivot_cost = working.pivot(index='Site ID', columns='Year', values='Total Energy Cost ($)')
+  
+  ten = pd.to_numeric(pivot_cost['2010']).dropna()
+  eleven = pd.to_numeric(pivot_cost['2011']).dropna()
+  twelve = pd.to_numeric(pivot_cost['2012']).dropna()
+  thirteen = pd.to_numeric(pivot_cost['2013']).dropna()
+  fourteen = pd.to_numeric(pivot_cost['2014']).dropna()
+  
+  averages = [np.median(ten), np.median(eleven), np.median(twelve), np.median(thirteen), np.median(fourteen)]
+  data = [go.Bar(
+            x=['2010', '2011', '2012', '2013', '2014'],
+            y=[averages[0], averages[1], averages[2], averages[3], averages[4] ],
+    )]
+  return data
+  
+def total_data():
+  data_df = pd.DataFrame(response[u'rows'], columns = response[u'columns'])
+  working = data_df[['Site', 'Site ID', 'Year', 'Total Energy (kBtu)', 'Total Energy Cost ($)']]
+  pivot_cost = working.pivot(index='Site ID', columns='Year', values='Total Energy Cost ($)')
+  
+  ten = pd.to_numeric(pivot_cost['2010']).dropna()
+  eleven = pd.to_numeric(pivot_cost['2011']).dropna()
+  twelve = pd.to_numeric(pivot_cost['2012']).dropna()
+  thirteen = pd.to_numeric(pivot_cost['2013']).dropna()
+  fourteen = pd.to_numeric(pivot_cost['2014']).dropna()
+  
+  averages = [np.sum(ten), np.sum(eleven), np.sum(twelve), np.sum(thirteen), np.sum(fourteen)]
+  data = [go.Bar(
+            x=['2010', '2011', '2012', '2013', '2014'],
+            y=[averages[0], averages[1], averages[2], averages[3], averages[4] ],
+    )]
+  return data
+  
+  
+  
+
+
+#data = totalcostplot_energy()
+#fig = go.Figure(data=data[0], layout=data[1])
+# fig = histogram()
+# fig['layout'].update( yaxis=dict(
+#         range=[0,0.1]
+#     ))
+# data = median_data()
+#py.iplot(data)
+
+# data2 = boxplot()
+# py.iplot(data2)
+# boxplot()
+# sanitized_boxplot()
+#average_data()
+#total_data()
